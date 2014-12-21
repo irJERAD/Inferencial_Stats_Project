@@ -1,4 +1,5 @@
 Inferencial_Stats_Project
 =========================
 
-Exponential Distribution Simulation and Tooth Growth Statistical Inference
+Part 1: Exponential Distribution Simulation
+Part 2: Tooth Growth Statistical Inference
