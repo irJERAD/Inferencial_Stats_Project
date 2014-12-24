@@ -1,0 +1,96 @@
+---
+title: "P2_Basic_Inferential_Data_Analysis"
+author: "Jerad Acosta"
+date: "December 21, 2014"
+output: pdf_document
+---
+####1 Load Libraries and Data
+```{r, message=FALSE}
+library(plyr)
+library(ggplot2)
+library(datasets)
+data(ToothGrowth)
+data <- ToothGrowth
+```
+
+### Then *get to know the data*
+```{r, echo=TRUE}
+# dim(data) tells us there are 3 variables and 60 observations
+dim(data)
+# summary(data) gives us the name of the variables as well as their range
+summary(data)
+unique(data$dose)
+```
+Now we know that of the 3 variables one, **supp** is a factor with two levels 
+which represent different types of delivery methods (Orange Juice or Ascorbic acid)
+and the other two, **len** and **dose** are numeric but the unique() function
+tells us that there are only 3 values for **dose**
+
+A little reading into into the dataset with **?ToothGrowth** and we can see that we are measuring tooth length against the two factors **supp** and amount or **dose**
+
+### 2 basic summary of the data
+Thus it seems like the best way to plot out data would be to break it into both
+**dose** and **supp** values and factors against the tooth length or **len** variable
+```{r}
+ggplot(ToothGrowth, aes(x = factor(dose), y = len, fill = supp)) +
+    xlab("Dose (mg)") +
+    ylab("Tooth length") +
+    scale_fill_discrete(name="Delivery method",
+                breaks=c("OJ", "VC"),
+                labels=c("Orange juice", "Ascorbic acid")) + geom_boxplot()
+```
+
+The boxplot seems to immediately suggest that a higher **dose** is associated with more **len**. However, while this pattern seems to hold true across the different delivery methods **supp** factors, there doesn't appear to be as significant of a relationship between which *delivery method* or **supp** is used.
+
+To be sure, however, we should run some statistical methods to see how we can quantify this relationship between **dose** and **len** and or lack of one between the factors of **supp** and **len**
+
+### 3 Confidence intervals using a Two Factor ANOVA test
+Since we are trying to find the predictive effect of two regressors **dose** and **supp** on a predictor value **len** it is necessary to remove any linear relationships and confounding coefficient data.
+Rather that factoring each regressor out from each other one at a time, the ANOVA test is a more efficient and sufficiently detailed methodology
+```{r}
+data$dose<- as.numeric(as.character(data$dose))
+data$dose <- factor(data$dose)
+data$supp <- factor(data$supp)
+fit <- aov(len ~ dose*supp, data = data)
+summary(fit)
+```
+
+While the Orange Juice factor of **supp** appears to have a promising positive slope, there is quite a bit of overlap between 1mg and 2mg **dose** so a hypothesis test to see if there is a statistical significance in the increase from 1mg to 2mg **dose**
+
+```{r}
+# Seperate the three subgroups
+ToothGrowth.doses_0.5_1.0 <- subset (ToothGrowth, dose %in% c(0.5, 1.0)) 
+ToothGrowth.doses_1.0_2.0 <- subset (ToothGrowth, dose %in% c(1.0, 2.0))
+ToothGrowth.doses_0.5_2.0 <- subset (ToothGrowth, dose %in% c(0.5, 2.0)) 
+# Check for group differences due to different dose levels (1.0, 2.0)
+t.test(len ~ dose, data = ToothGrowth.doses_1.0_2.0)
+# Check for group differences due to different dose levels (0.5, 1.0)
+t.test(len ~ dose, data = ToothGrowth.doses_0.5_1.0)
+# Check for group differences due to different dose levels (0.5, 2.0)
+t.test(len ~ dose, data = ToothGrowth.doses_0.5_2.0)
+```
+For each dose of the three potential dose combinations , the p-value is less than 0.05 and non of the confidence intervals contain a zero value so we can confidently reject the null hypothesis that increase in **dose** is not correlated with increase in **len**
+
+While delivery method or **supp** does not appear to have a significant affect we should still check for any statistical significance.
+```{r}
+ddply(ToothGrowth,dose~supp,function(x) c(mean=mean(x$len),confidence.intervall=t.test(x$len)$conf.int))
+```
+
+Now that we can see that with these confidence intervals that **supp** does have an effect. Particularly in lower **dose** ranges. This is such that Orange Juice has a significant positive slope over Ascorbic acid in the 0.5mg **dose** range and even more so in the 1mg **dose** range. The 2mg range, however is overlapping and rather  inconclusive.
+
+### 4 Conclusion
+Based on removing the develery factor and seeing a significant positive slope with an increase in **dose** to an increase in **len** we could at first conclude at the minimum there was at least a single simple relationship.
+After controlling for **dose**, however, it became clear that certain relationships were supportable; namely, that at lower doses, Orange Juice has a more positive coefficient with **len** than Ascorbic Acid.
+Thus, it would be prudent to suspect that there is some mixture of effects going on here. Perhaps both **supp** factors are a positive regressor on **len** but when looking at a single dose - particularly in the lower and even mid ranges - there appears to be a Positive Ceofficient for Orange Juice and a negative or less or an affect correlated with the Ascorbic Acid.
+
+This becomes most evident when we use an interaction plot as such
+```{r}
+with(data, {
+interaction.plot(dose, supp, len, type="b", col=c(1:3),
+                 leg.bty="o", leg.bg="light blue", lwd=2, pch=c(18,24,22),
+                 xlab="Dose",
+                 ylab="Tooth length",
+                 main="Interaction Plot")
+})
+````
+And the difference in Coefficient for each regressor is dependent on another regressor, which in this case is the **dose** variable
