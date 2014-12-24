@@ -2,4 +2,4 @@ Inferencial_Stats_Project
 =========================
 
 Part 1: Exponential Distribution Simulation \n
-Part 2: Tooth Growth Statistical Inference
+[Part 2](https://github.com/irJERAD/Inferencial_Stats_Project/blob/master/P2_Basic_Inferential_Data_Analysis.Rmd): Tooth Growth Statistical Inference
