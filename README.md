@@ -1,5 +1,0 @@
-Inferencial_Stats_Project
-=========================
-
-Part 1: [Exponential Distribution Simulation](https://github.com/irJERAD/Inferencial_Stats_Project/blob/master/P1_Simulation_Exercise.Rmd)
-Part 2: [Tooth Growth Statistical Inference](https://github.com/irJERAD/Inferencial_Stats_Project/blob/master/P2_Basic_Inferential_Data_Analysis.Rmd)
